@@ -1,0 +1,34 @@
+graph LR
+    subgraph MVP["Phase 1 — MVP (2週間で構築)"]
+
+        REP["🧑‍💼 Sales Rep"]
+
+        subgraph UI["Web Dashboard — Vercel"]
+            DASH["リード一覧<br/>+ 音声プレーヤー"]
+            WIDGET["ElevenLabs<br/>Voice Widget"]
+        end
+
+        subgraph ELEVEN["ElevenAgents"]
+            AGENT["Conversational AI<br/>+ Built-in LLM<br/>+ Japanese TTS"]
+            KB["Knowledge Base<br/>ISP商品情報 / FAQ"]
+        end
+
+        SUPA["Supabase<br/>ダミー顧客50件<br/>+ 通話ログ"]
+
+        REP -->|ブラウザ| DASH
+        REP -->|音声で質問| WIDGET
+        WIDGET -->|WebSocket| AGENT
+        AGENT --- KB
+        AGENT -->|Tool Call| SUPA
+        DASH -->|CRUD| SUPA
+    end
+
+    classDef user fill:#6366f1,stroke:#4f46e5,color:#fff
+    classDef ui fill:#22c55e,stroke:#16a34a,color:#fff
+    classDef ai fill:#7c3aed,stroke:#6d28d9,color:#fff
+    classDef db fill:#0ea5e9,stroke:#0284c7,color:#fff
+
+    class REP user
+    class DASH,WIDGET ui
+    class AGENT,KB ai
+    class SUPA db
