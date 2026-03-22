@@ -1,0 +1,90 @@
+graph TB
+    subgraph USER["Users"]
+        REP["Sales Rep<br/>営業担当者"]
+        MGR["Sales Manager"]
+        CUSTOMER["Customer<br/>見込み客"]
+    end
+
+    subgraph CHANNELS["Channels / Interfaces"]
+        WEB["Web App<br/>ブラウザ"]
+        PHONE_APP["Phone App<br/>iOS / Android"]
+        LINE_APP["LINE<br/>公式アカウント"]
+        SLACK_CH["Slack<br/>社内チャネル"]
+        TEL["電話<br/>Twilio / SIP"]
+        WHATSAPP["WhatsApp"]
+        ETC["etc...<br/>SMS / Email / Messenger"]
+    end
+
+    subgraph FRONTEND["Frontend — Vercel"]
+        DASH["Dashboard<br/>リード管理 / 通話履歴 / 成績"]
+        WIDGET["ElevenLabs Widget<br/>音声エージェントUI"]
+    end
+
+    subgraph CORE["Core — ElevenAgents"]
+        AGENT["ElevenLabs<br/>Conversational AI 2.0"]
+        RAG["Built-in RAG<br/>商品知識 / FAQ / トークスクリプト"]
+        LLM["Built-in LLM<br/>Claude / GPT"]
+        VOICE["Japanese TTS<br/>Konoha / Hideki / あいこ"]
+    end
+
+    subgraph DATA["Data Layer"]
+        SUPA["Supabase<br/>顧客DB / 通話履歴 / 音声ログ"]
+        KIKAN_A["基幹システムA<br/>契約情報"]
+        KIKAN_B["基幹システムB<br/>請求 / 回線情報"]
+        KIKAN_C["基幹システムC<br/>工事 / 開通状況"]
+    end
+
+    subgraph ORCHESTRATION["Orchestration"]
+        N8N["n8n<br/>バッチ処理 / 日次リード抽出"]
+    end
+
+    %% Users to Channels
+    REP -->|営業ツールとして利用| WEB
+    REP -->|外出先から| PHONE_APP
+    REP -->|社内連携| SLACK_CH
+    MGR -->|成績確認| WEB
+    CUSTOMER -->|問い合わせ| LINE_APP
+    CUSTOMER -->|着電 / 架電| TEL
+    CUSTOMER -->|海外顧客| WHATSAPP
+
+    %% Channels to Frontend / Agent
+    WEB -->|ブラウザアクセス| DASH
+    WEB -->|WebSocket| WIDGET
+    PHONE_APP -->|API| DASH
+    PHONE_APP -->|WebSocket| AGENT
+    LINE_APP -->|Webhook| AGENT
+    SLACK_CH -->|Slack Events| AGENT
+    TEL -->|SIP / Twilio| AGENT
+    WHATSAPP -->|WhatsApp API| AGENT
+    ETC -->|各種API| AGENT
+
+    %% Frontend to Core
+    WIDGET -->|WebSocket| AGENT
+    AGENT --- RAG
+    AGENT --- LLM
+    AGENT --- VOICE
+
+    %% Core to Data
+    AGENT -->|Tool Call: 顧客データ| SUPA
+    AGENT -->|Tool Call: 契約照会| KIKAN_A
+    AGENT -->|Tool Call: 請求照会| KIKAN_B
+    AGENT -->|Tool Call: 工事状況| KIKAN_C
+    AGENT -->|通話結果保存| SUPA
+
+    %% Orchestration
+    N8N -->|日次リード抽出| SUPA
+    N8N -->|リード通知| SLACK_CH
+    N8N -->|バッチ架電トリガー| AGENT
+    DASH -->|Read/Write| SUPA
+
+    classDef done fill:#22c55e,stroke:#16a34a,color:#fff
+    classDef partial fill:#f59e0b,stroke:#d97706,color:#fff
+    classDef todo fill:#ef4444,stroke:#dc2626,color:#fff
+    classDef user fill:#6366f1,stroke:#4f46e5,color:#fff
+    classDef channel fill:#0ea5e9,stroke:#0284c7,color:#fff
+
+    class REP,MGR,CUSTOMER user
+    class WEB,PHONE_APP,LINE_APP,SLACK_CH,TEL,WHATSAPP,ETC channel
+    class DASH,SUPA,SLACK done
+    class N8N,WIDGET partial
+    class AGENT,RAG,LLM,VOICE,KIKAN_A,KIKAN_B,KIKAN_C todo
